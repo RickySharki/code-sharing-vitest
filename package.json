@@ -1,0 +1,22 @@
+{
+  "name": "ppt-share",
+  "private": true,
+  "scripts": {
+    "build": "slidev build",
+    "dev": "slidev --open",
+    "export": "slidev export"
+  },
+  "dependencies": {
+    "@slidev/cli": "^0.40.14",
+    "@slidev/theme-default": "*",
+    "@slidev/theme-seriph": "*",
+    "sass": "^1.62.0",
+    "slidev-theme-penguin": "^1.6.1",
+    "slidev-theme-purplin": "^1.2.0",
+    "vite-svg-loader": "^4.0.0"
+  },
+  "devDependencies": {
+    "@iconify-json/logos": "^1.1.25",
+    "@iconify-json/simple-icons": "^1.1.49"
+  }
+}
