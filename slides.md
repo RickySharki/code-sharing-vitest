@@ -253,10 +253,12 @@ export const useTodotore = defineStore("todo", () => {
 
 ---
 layout: image-x
-image: '/assets/vitest-plugin.gif'
+image: '/assets/vitest-plugin.jpg'
 ---
 
 # 对单个测试用例进行测试
+
+在vitest插件中，可以像vscode的`debugger`功能一样，选择运行某个测试case，不需要跑命令
 
 <BarBottom  title="Liga技术分享">
   <Item text="Sharkchili1015">
