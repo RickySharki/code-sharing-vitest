@@ -271,14 +271,24 @@ image: '/assets/vitest-plugin.gif'
 
 # 单元测试在`工时逻辑`中的应用
 
-Slidev is a slides maker and presenter designed for developers, consist of the following features
+<br>
+
+## 工时的逻辑
+- `工时`的输出有两种情况，null的时候是`-`，0的时候是0。
+- 精度在小数点后一位
+- 最大值>=999
+- 不能有负数
+<br>
+
+## 工时交互（dom）
+
+- 不允许用户输入两位精度的小数或者复数，当有这种情况出现的时候值保持在符合要求的那个数字
+- 当出现不允许的情况出现红色报错提示
+
   
 
 
 <br>
-<br>
-
-Read more about [Why Slidev?](https://sli.dev/guide/why)
 
 <BarBottom  title="Liga技术分享">
   <Item text="Sharkchili1015">
@@ -291,18 +301,64 @@ Read more about [Why Slidev?](https://sli.dev/guide/why)
 
 ---
 
-# Navigation
+# ！！无法适合编写单元测试的代码
 
-Hover on the bottom-left corner to see the navigation's controls panel
+<div class="overflow-y-auto" style="max-height:350px;min-wight">
 
-### Keyboard Shortcuts
+```ts
+    const currentUpdateEstimateLabour = useDebounceFn(() => {
+      //第一件事：对比预估工时与保留的值
+      if (
+        !isEqual(currentLabourInput.value, stagingInputValue.value) &&
+        !loading.value
+      ) {
+        //第二件事：判断预估工时是否合法
+        const isNull = isEmpty(currentLabourInput.value);
+        const remainingLabour =
+          new Decimal(currentLabourInput.value || 0)
+            .sub(currentWorkActualLabour.value || 0)
+            .toNumber();
+        const id = Number(issue.value?.id);
 
-|     |     |
-| --- | --- |
-| <kbd>space</kbd> / <kbd>tab</kbd> / <kbd>right</kbd> | next animation or slide |
-| <kbd>left</kbd> | previous animation or slide |
-| <kbd>up</kbd> | previous slide |
-| <kbd>down</kbd> | next slide |
+        const data = {
+          estimateLabour: isNull
+            ? null
+            : new Decimal(currentLabourInput.value || 0).toNumber(),
+          //父任务剩余工时：修改的预估工时-已消耗工时(actualLabour)
+          remainingLabour: remainingLabour,
+          //总预估工时 = currentLabourInput.value + 所有子任务的预估工时
+          totalEstimateLabour: isNull
+            ? null
+            : new Decimal(allEstimateLabour.value || 0).toNumber(),
+        };
+        //第三件事：判断预估工时是否不等于复数
+        remainingLabour < 0 ? delete data.remainingLabour : null;
+        //第四件事：发送请求
+        store.updateValue(data, id).then((res) => {
+          if (!res.success) {
+            //第五：请求结束后的回调
+            currentLabourInput.value = stagingInputValue.value;
+          } else {
+            noError();
+            labourEdit.value = null;
+          }
+        });
+      } else {
+        noError();
+        labourEdit.value = null;
+      }
+    }, 500);
+```
+如上所示确实不适合编写测试代码，因为一个函数确实太耦合了，一个函数做了至少五件事，无数个判断边缘条件。
+<br>
+
+`个人认为：能编写出完美测试的代码的可读性以及健壮性会远高于无法编写测试的代码`
+
+<br>
+例如我上面的这个代码，说实话现在看来真的就是屎山
+
+</div>
+
 
 <BarBottom  title="Liga技术分享">
   <Item text="Sharkchili1015">
@@ -318,7 +374,7 @@ layout: image-right
 image: 'https://user-images.githubusercontent.com/13499566/138950614-52ec045b-aa93-4d52-91df-b782cc9c7143.jpg'
 ---
 
-# Code
+# 改写预估工时的逻辑，编写对应代码
 
 Use code snippets and get the highlighting directly!
 
