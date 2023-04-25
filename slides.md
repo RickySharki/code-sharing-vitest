@@ -253,7 +253,7 @@ export const useTodotore = defineStore("todo", () => {
 
 ---
 layout: image-x
-image: '/assets/vitest-plugin.jpg'
+image: '../assets/vitest-plugin.jpg'
 ---
 
 # 对单个测试用例进行测试
