@@ -378,56 +378,96 @@ image: '../assets/vitest-plugin.jpg'
 <div class="overflow-y-auto" style="max-height:350px;min-wight">
 
 ```ts
-    const currentUpdateEstimateLabour = useDebounceFn(() => {
-      //第一件事：对比预估工时与保留的值
-      if (
+    // 1、判断是否能合法进入预估工时代码块
+    const isEnableToUpdateEstimateLabour = () => {
+      return (
         !isEqual(currentLabourInput.value, stagingInputValue.value) &&
         !loading.value
-      ) {
-        //第二件事：判断预估工时是否合法
-        const isNull = isEmpty(currentLabourInput.value);
-        const remainingLabour =
-          new Decimal(currentLabourInput.value || 0)
-            .sub(currentWorkActualLabour.value || 0)
-            .toNumber();
-        const id = Number(issue.value?.id);
-
-        const data = {
-          estimateLabour: isNull
-            ? null
-            : new Decimal(currentLabourInput.value || 0).toNumber(),
-          //父任务剩余工时：修改的预估工时-已消耗工时(actualLabour)
-          remainingLabour: remainingLabour,
-          //总预估工时 = currentLabourInput.value + 所有子任务的预估工时
-          totalEstimateLabour: isNull
-            ? null
-            : new Decimal(allEstimateLabour.value || 0).toNumber(),
-        };
-        //第三件事：判断预估工时是否不等于复数
-        remainingLabour < 0 ? delete data.remainingLabour : null;
-        //第四件事：发送请求
-        store.updateValue(data, id).then((res) => {
-          if (!res.success) {
-            //第五：请求结束后的回调
-            currentLabourInput.value = stagingInputValue.value;
-          } else {
-            noError();
-            labourEdit.value = null;
-          }
-        });
+      );
+    };
+    // 2、判断预估工时的值是否是null或者''
+    const isNullValue = (value: any): boolean => {
+      return isEmpty(value);
+    };
+    // 3、计算剩余工时的值（预估工时 - 已用工时）
+    const calculateRemainingLabour = (
+      estimateLabour: StringOrNull,
+      actualLabour: StringOrNull,
+    ): number => {
+      const remainingLabour = new Decimal(estimateLabour || 0)
+        .sub(actualLabour || 0)
+        .toNumber();
+      return remainingLabour < 0 ? 0 : remainingLabour;
+    };
+    //4、计算总的预估工时（子任务总预估工时+当前登记的预估工时）
+    const calculateTotalEstimateLabour = (
+      estimateLabour: StringOrNull,
+      allSubtaskEstimateLabour: StringOrNull,
+    ): number | null => {
+      if (isNullValue(estimateLabour)) {
+        return null;
+      }
+      const totalEstimateLabour = new Decimal(estimateLabour || 0)
+        .add(allSubtaskEstimateLabour || 0)
+        .toNumber();
+      return totalEstimateLabour;
+    };
+    //5、将每个函数结合起来，转换成data参数
+    const coverEstimateLabour = () => {
+      const isNull = isNullValue(currentLabourInput.value);
+      const remainingLabour = calculateRemainingLabour(
+        currentLabourInput.value!,
+        currentWorkActualLabour.value,
+      );
+      const estimateLabour = isNull
+        ? null
+        : new Decimal(currentLabourInput.value || 0).toNumber();
+      const totalEstimateLabour = calculateTotalEstimateLabour(
+        currentLabourInput.value!,
+        allEstimateLabour.value,
+      );
+      const data = {
+        estimateLabour,
+        remainingLabour,
+        totalEstimateLabour,
+      };
+      return data;
+    };
+    //6、请求失败后回调
+    const afterNotSuccess = () => {
+      noError();
+      labourEdit.value = null;
+      return labourEdit.value;
+    };
+    //7、请求成功后回调
+    const afterSuccess = () =>{
+      currentLabourInput.value = stagingInputValue.value;
+      return currentLabourInput.value;
+    }
+    //父任务更新预估工时
+    const currentUpdateEstimateLabour = useDebounceFn(async () => {
+      if (isEnableToUpdateEstimateLabour()) {
+        const params = coverEstimateLabour();
+        const result = await store.updateValue(params, Number(issue.value?.id));
+        result.success
+          ? afterNotSuccess()
+          : afterSuccess();
       } else {
-        noError();
-        labourEdit.value = null;
+        afterNotSuccess();
       }
     }, 500);
 ```
-如上所示确实不适合编写测试代码，因为一个函数确实太耦合了，一个函数做了至少五件事，无数个判断边缘条件。
+经过改写之后的代码从一个函数拆分成了七个函数，不仅颗粒度变低了，代码的可读性也变得更好<br>
+重要的是代码的可测试性大大提高，七个函数基本上每一个函数只复杂做一件事<br>
+在编写测试代码的时候，只需要观察每个函数的输入和输出是否是按预期执行的即可（涉及到dom的操作先不考虑）<br>
+在执行单元测试的时候，如果哪个环节出错了很快就能发现问题
 <br>
 
-`个人认为：能编写出单元测试的代码的可读性以及健壮性会远高于无法编写测试的代码`
+# 小结
+ - 尽可能降低代码的`耦合性`，每个函数`各司其职`
 
 <br>
-例如我上面的这个代码，说实话现在看来真的就是屎山
+优化完了之后是不是看着爽多了~
 
 </div>
 
@@ -448,58 +488,85 @@ image: '../assets/vitest-plugin.jpg'
 <div class="overflow-y-auto" style="max-height:350px;min-wight">
 
 ```ts
-    const currentUpdateEstimateLabour = useDebounceFn(() => {
-      //第一件事：对比预估工时与保留的值
-      if (
-        !isEqual(currentLabourInput.value, stagingInputValue.value) &&
-        !loading.value
-      ) {
-        //第二件事：判断预估工时是否合法
-        const isNull = isEmpty(currentLabourInput.value);
-        const remainingLabour =
-          new Decimal(currentLabourInput.value || 0)
-            .sub(currentWorkActualLabour.value || 0)
-            .toNumber();
-        const id = Number(issue.value?.id);
+import {
+  isEnableToUpdateEstimateLabour,
+  isNullValue,
+  calculateRemainingLabour,
+  calculateTotalEstimateLabour,
+  coverEstimateLabour,
+} from "../utils";
 
-        const data = {
-          estimateLabour: isNull
-            ? null
-            : new Decimal(currentLabourInput.value || 0).toNumber(),
-          //父任务剩余工时：修改的预估工时-已消耗工时(actualLabour)
-          remainingLabour: remainingLabour,
-          //总预估工时 = currentLabourInput.value + 所有子任务的预估工时
-          totalEstimateLabour: isNull
-            ? null
-            : new Decimal(allEstimateLabour.value || 0).toNumber(),
-        };
-        //第三件事：判断预估工时是否不等于复数
-        remainingLabour < 0 ? delete data.remainingLabour : null;
-        //第四件事：发送请求
-        store.updateValue(data, id).then((res) => {
-          if (!res.success) {
-            //第五：请求结束后的回调
-            currentLabourInput.value = stagingInputValue.value;
-          } else {
-            noError();
-            labourEdit.value = null;
-          }
-        });
-      } else {
-        noError();
-        labourEdit.value = null;
-      }
-    }, 500);
+import { describe, expect, it, beforeEach } from "vitest";
+
+describe("isEnableToUpdateEstimateLabour函数测试，进入预估工时函数之前的前置条件函数", () => {
+  it("当两个值相同的时候返回false", () => {
+    expect(isEnableToUpdateEstimateLabour(1, 1)).toBe(false);
+  });
+  it("当两个值不同的时候返回true", () => {
+    expect(isEnableToUpdateEstimateLabour(1, 2)).toBe(true);
+  });
+});
+
+describe("isNullValue函数测试", () => {
+  it("输入的值为null或者为''的时候返回true", () => {
+    expect(isNullValue('')).toBe(true);
+  });
+
+  it("输入的值不为null或''的时候返回false", () => {
+    // navieUI输入框默认是string类型
+    expect(isNullValue('1')).toBe(false);
+  });
+});
+
+ // 3、计算剩余工时的值（预估工时 - 已用工时）
+describe("calculateRemainingLabour函数测试", () => {
+  it("当剩余工时小于0时，应该返回0", () => {
+    expect(calculateRemainingLabour(0,1)).toBe(0);
+  });
+
+  it("当预估工时为null时，默认为0", () => {
+    expect(calculateRemainingLabour(null,1)).toBe(0);
+  });
+
+  it("当剩余工时为>0时，正常输出", () => {
+    expect(calculateRemainingLabour(10,1)).toBe(9);
+  });
+  it("当预估工时为1，剩余工时为1，输出为0", () => {
+    expect(calculateRemainingLabour(1,1)).toBe(0);
+  });
+});
+
+describe("calculateTotalEstimateLabour函数测试", () => {
+  it("当剩余工时小于0时，应该返回0", () => {
+    expect(calculateTotalEstimateLabour('1','1')).toBe(2);
+  });
+});
+//4、计算总的预估工时（子任务总预估工时+当前登记的预估工时）
+describe("coverEstimateLabour函数测试", () => {
+  it("在最后的汇总函数中对所有的函数再重复执行一遍", () => {
+    console.log('coverEstimateLabour(1,1,1)',coverEstimateLabour(1,1,1))
+    expect(coverEstimateLabour('1','1','1')).toContain({
+      estimateLabour: isNullValue('1') ? null : 1,
+      remainingLabour:calculateRemainingLabour(1,1),
+      totalEstimateLabour:calculateTotalEstimateLabour('1','1')
+    });
+  });
+});
+
 ```
-如上所示确实不适合编写测试代码，因为一个函数确实太耦合了，一个函数做了至少五件事，无数个判断边缘条件。
-<br>
-
-`个人认为：能编写出单元测试的代码的可读性以及健壮性会远高于无法编写测试的代码`
-
-<br>
-例如我上面的这个代码，说实话现在看来真的就是屎山
-
 </div>
+<br><br>
+如上述的单元测试代码，我们基本将预估工时涉及到的所有的函数都进行一遍测试，可以看`coverage`中的测试覆盖率，在utils文件下的测试覆盖率已经达到100%
+<br>
+<br>
+
+# 总结
+
+## 以上就是非常简单的前端单元测试的一个demo，我对于单元测试也不太熟悉，但是从我了解到的单元测试内容来说，我认为还是有很多好处的
+
+- 对于一些公共工具类函数（不会因为需求的变动而改变），单元测试我认为是非常需要的
+- 对于一些交互很复杂，并且不够底层的组件，不太适合使用单元测试，因为其实编写单元测试也是需要时间成本的，如果一些组件很复杂单元测试代码会很多，如果需求变动可能整个测试代码就没用了
+- 单元测试代码可以让我们的代码更加易懂，因为单元测试`it("在最后的汇总函数中对所有的函数再重复执行一遍")`,其实可以充当`代码文档`的存在
 
 
 <BarBottom  title="Liga技术分享">
