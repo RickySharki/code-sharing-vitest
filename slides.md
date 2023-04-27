@@ -109,7 +109,7 @@ position: left
 在todolist组件中我们实现了`添加`、`删除`、`完成`,`command命令式添加`的基础功能，具体功能稍后请看演示
 
 </div>
-<div class="overflow-y-auto" style="max-height:350px;min-wight">
+<div class="overflow-y-auto" style="max-height:400px;min-wight">
 ```ts
 <template>
     <h1>ToDo App</h1>
@@ -168,7 +168,7 @@ position: left
 TodoList组件所依赖的所有数据都在store中管理，具体涉及到的逻辑操作都在store中进行这样更有利于编写测试代码（并不一定都需要在store中管理，可以直接在组件中对数据进行管理，一样可以编写测试代码）,具体逻辑看演示。
 
 </div>
-<div class="overflow-y-auto" style="max-height:350px;min-wight">
+<div class="overflow-y-auto" style="max-height:400px;min-wight">
 
 ```ts
 import { defineStore } from "pinia";
@@ -303,9 +303,8 @@ image: '../assets/vitest-plugin.jpg'
 
 ---
 
-# ！！无法适合编写单元测试的代码
-
-<div class="overflow-y-auto" style="max-height:350px;min-wight">
+# ！！无法适合编写单元测试的代码(示例代码) 1/2
+<div class="overflow-y-auto" style="max-height:400px;">
 
 ```ts
     const currentUpdateEstimateLabour = useDebounceFn(() => {
@@ -316,6 +315,7 @@ image: '../assets/vitest-plugin.jpg'
       ) {
         //第二件事：判断预估工时是否合法
         const isNull = isEmpty(currentLabourInput.value);
+        // 第三件事：计算剩余工时
         const remainingLabour =
           new Decimal(currentLabourInput.value || 0)
             .sub(currentWorkActualLabour.value || 0)
@@ -328,17 +328,17 @@ image: '../assets/vitest-plugin.jpg'
             : new Decimal(currentLabourInput.value || 0).toNumber(),
           //父任务剩余工时：修改的预估工时-已消耗工时(actualLabour)
           remainingLabour: remainingLabour,
-          //总预估工时 = currentLabourInput.value + 所有子任务的预估工时
+          // 第四件事：总预估工时 = currentLabourInput.value + 所有子任务的预估工时
           totalEstimateLabour: isNull
             ? null
             : new Decimal(allEstimateLabour.value || 0).toNumber(),
         };
-        //第三件事：判断预估工时是否不等于复数
+        //第五件事：判断预估工时是否不等于负数
         remainingLabour < 0 ? delete data.remainingLabour : null;
-        //第四件事：发送请求
+        //第六件事：发送请求
         store.updateValue(data, id).then((res) => {
           if (!res.success) {
-            //第五：请求结束后的回调
+            //第七：请求结束后的回调
             currentLabourInput.value = stagingInputValue.value;
           } else {
             noError();
@@ -351,15 +351,47 @@ image: '../assets/vitest-plugin.jpg'
       }
     }, 500);
 ```
-如上所示确实不适合编写测试代码，因为一个函数确实太耦合了，一个函数做了至少五件事，无数个判断边缘条件。
+</div>
+
+
+<BarBottom  title="Liga技术分享">
+  <Item text="Sharkchili1015">
+    <carbon:logo-github />
+  </Item>
+  <Item text="ligai.cn/">
+    <carbon:link />
+  </Item>
+</BarBottom>
+
+
+---
+
+# 无法适合编写单元测试的代码 2/2
+<div class="overflow-y-auto" style="padding-left:10px;max-height:400px;">
+<br>
+<br>
+
+### 上面的函数主要作用
+
+- 第一件事：对比预估工时与保留的值
+- 第二件事：判断预估工时是否合法
+- 第三件事：计算剩余工时
+- 第四件事：计算总预估工时 = currentLabourInput.value + 所有子任务的预估工时
+- 第五件事：判断预估工时是否不等于负数
+- 第六件事：发送请求
+- 第七：请求结束后的回调
+<br>
+<br>
+如上所示，一个函数做了七件事，首先就是代码可读性很低，其次就是代码的`健壮性`不够，后续想要再加新功能会很难受<br>
+其二：这种函数确实不适合编写测试代码，因为一个函数确实太耦合了，一个函数做了七件事，我们的测试代码基本是基于函数的输入和输出去进行测试的，如果一个函数有一个输出但是造成了七种不同的副作用，会导致很难编写测试代码。
 <br>
 
 `个人认为：能编写出单元测试的代码的可读性以及健壮性会远高于无法编写测试的代码`
 
 <br>
 例如我上面的这个代码，说实话现在看来真的就是屎山
-
 </div>
+
 
 
 <BarBottom  title="Liga技术分享">
@@ -373,9 +405,9 @@ image: '../assets/vitest-plugin.jpg'
 
 ---
 
-# 改写预估工时的逻辑
+# 改写预估工时的逻辑(示例代码) 1/2
 
-<div class="overflow-y-auto" style="max-height:350px;min-wight">
+<div class="overflow-y-auto" style="max-height:400px;">
 
 ```ts
     // 1、判断是否能合法进入预估工时代码块
@@ -457,18 +489,6 @@ image: '../assets/vitest-plugin.jpg'
       }
     }, 500);
 ```
-经过改写之后的代码从一个函数拆分成了七个函数，不仅颗粒度变低了，代码的可读性也变得更好<br>
-重要的是代码的可测试性大大提高，七个函数基本上每一个函数只复杂做一件事<br>
-在编写测试代码的时候，只需要观察每个函数的输入和输出是否是按预期执行的即可（涉及到dom的操作先不考虑）<br>
-在执行单元测试的时候，如果哪个环节出错了很快就能发现问题
-<br>
-
-# 小结
- - 尽可能降低代码的`耦合性`，每个函数`各司其职`
-
-<br>
-优化完了之后是不是看着爽多了~
-
 </div>
 
 
@@ -483,9 +503,36 @@ image: '../assets/vitest-plugin.jpg'
 
 ---
 
-# 编写预估工时对应的单元测试
+# 改写预估工时的逻辑 2/2
+<div  style="max-height:400px;padding-left:10px">
 
-<div class="overflow-y-auto" style="max-height:350px;min-wight">
+- 经过改写之后的代码从一个函数拆分成了七个函数，不仅颗粒度变低了，代码的可读性也变得更好
+- 重要的是代码的可测试性大大提高，七个函数基本上每一个函数只复杂做一件事
+- 在编写测试代码的时候，只需要观察每个函数的输入和输出是否是按预期执行的即可（涉及到dom的操作先不考虑）
+- 在执行单元测试的时候，如果哪个环节出错了很快就能发现问题
+
+
+# 小结
+ - 尽可能降低代码的`耦合性`，每个函数`各司其职`
+
+<br>
+优化完了之后是不是看着爽多了~
+</div>
+
+
+
+<BarBottom  title="Liga技术分享">
+  <Item text="Sharkchili1015">
+    <carbon:logo-github />
+  </Item>
+  <Item text="ligai.cn/">
+    <carbon:link />
+  </Item>
+</BarBottom>
+---
+
+# 编写预估工时对应的单元测试(示例代码) 1/2
+<div class="overflow-y-auto" style="max-height:400px;min-wight">
 
 ```ts
 import {
@@ -554,18 +601,40 @@ describe("coverEstimateLabour函数测试", () => {
 });
 
 ```
-<br><br>
+</div>
+
+
+
+<BarBottom  title="Liga技术分享">
+  <Item text="Sharkchili1015">
+    <carbon:logo-github />
+  </Item>
+  <Item text="ligai.cn/">
+    <carbon:link />
+  </Item>
+</BarBottom>
+
+---
+
+# 编写预估工时对应的单元测试 2/2
+<div class="overflow-y-auto" style="max-height:400px;min-wight">
+<div  class="overflow-y-auto" style="max-height:400px;padding-left:10px">
+<br>
 如上述的单元测试代码，我们基本将预估工时涉及到的所有的函数都进行一遍测试，可以看`coverage`中的测试覆盖率，在utils文件下的测试覆盖率已经达到100%
 <br>
 <br>
 
 # 总结
 
-## 以上就是非常简单的前端单元测试的一个demo，我对于单元测试也不太熟悉，但是从我了解到的单元测试内容来说，我认为还是有很多好处的
+#### 以上就是非常简单的前端单元测试的一个demo，我对于单元测试也不太熟悉，但是从我了解到的单元测试内容来说，我认为还是有很多好处的
+
+<br>
 
 - 对于一些公共工具类函数（不会因为需求的变动而改变），单元测试我认为是非常需要的
 - 对于一些交互很复杂，并且不够底层的组件，不太适合使用单元测试，因为其实编写单元测试也是需要时间成本的，如果一些组件很复杂单元测试代码会很多，如果需求变动可能整个测试代码就没用了
 - 单元测试代码可以让我们的代码更加易懂，因为单元测试`it("在最后的汇总函数中对所有的函数再重复执行一遍")`,其实可以充当`代码文档`的存在
+</div>
+
 </div>
 
 
