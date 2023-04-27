@@ -174,34 +174,20 @@ position: left
 
 ```ts
 import { defineStore } from "pinia";
-import { ref, watch } from "vue";
+import { nextTick, ref, watch } from "vue";
 type Todo = {
   done: boolean;
   content: string;
 };
 export const useTodotore = defineStore("todo", () => {
+
   const count = ref(0);
   const add = () => {
     count.value++;
   };
-  const defaultData = [
-    {
-      done: false,
-      content: "Write a blog post",
-    },
-  ];
-  const isRealClear = ref<Boolean>(false)
+
   const todoList = ref<Todo[]>([]);
-  watch(
-    () => todoList.value,
-    () => {
-      if (todoList.value.length === 0 && !isRealClear.value) {
-        todoList.value.push(...defaultData);
-      }
-    },{
-      immediate:true
-    }
-  );
+
   const addTodo = (todo: string) => {
     const isTop = todo.includes("top:");
     const isDone = todo.includes("done:");
@@ -227,8 +213,7 @@ export const useTodotore = defineStore("todo", () => {
   }
 
   const removeAll = () =>{
-    isRealClear.value = true
-    todoList.value = []
+    todoList.value = [];
   }
   return {
     count,
@@ -240,6 +225,7 @@ export const useTodotore = defineStore("todo", () => {
     removeAll
   };
 });
+
 
 ```
 </div>
@@ -367,7 +353,7 @@ describe("todoStore", () => {
 
 ---
 
-# ！！无法适合编写单元测试的代码(示例代码) 1/2
+# ！！不适合编写单元测试的代码(示例代码) 1/2
 <div class="overflow-y-auto" style="max-height:400px;">
 
 ```ts
