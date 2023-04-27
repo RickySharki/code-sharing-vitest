@@ -165,7 +165,9 @@ position: left
 <div class="grid grid-cols-2 gap-x-2">
 <div class="flex items-center justify-center p-4">
 
-TodoList组件所依赖的所有数据都在store中管理，具体涉及到的逻辑操作都在store中进行这样更有利于编写测试代码（并不一定都需要在store中管理，可以直接在组件中对数据进行管理，一样可以编写测试代码）,具体逻辑看演示。
+- TodoList组件所依赖的所有数据都在store中管理，具体涉及到的逻辑操作都在store中进行这样更有利于编写测试代码。
+- 其实并不一定都需要在store中管理，但是为了遵循`保持业务逻辑和显示逻辑分离`的原则，这里将`业务逻辑`和`dom显示`抽离
+- 具体逻辑看演示。
 
 </div>
 <div class="overflow-y-auto" style="max-height:400px;min-wight">
@@ -250,6 +252,86 @@ export const useTodotore = defineStore("todo", () => {
     <carbon:link />
   </Item>
 </BarBottom>
+
+---
+
+# TodoList单元测试代码 
+<div class="overflow-y-auto" style="max-height:400px;">
+
+```ts
+import { describe, expect, it, beforeEach } from "vitest";
+import { createPinia, setActivePinia } from "pinia";
+import { useTodotore } from "../store/modules/todo";
+
+describe("todoStore", () => {
+  beforeEach(() => {
+    setActivePinia(createPinia());
+  });
+
+  it("调用add函数count应该+1", () => {
+    const store = useTodotore();
+    store.add();
+    expect(store.count).toBe(1);
+  });
+
+  it("使用top:命令应该将todo放到第一位", () => {
+    const store = useTodotore();
+    store.addTodo("top:1");
+    expect(store.todoList[0].content).toBe("1");
+  });
+
+  it("使用top:和done:命令应该将todo放到第一位状态为done", () => {
+    const store = useTodotore();
+    store.addTodo("top:done:1");
+    expect(store.todoList[0]).toEqual({
+        done: true,
+        content: "1",
+    });
+  });
+
+  it("使用done:命令应该添加一个done为true的todo在数组末尾", () => {
+    const store = useTodotore();
+    store.addTodo("done:1");
+    expect(store.todoList[store.todoList.length -1]).toEqual({
+        done: true,
+        content: "1",
+    });
+  });
+
+  it("调用doneTodo应该将对应index的done状态改变为true", () => {
+    const store = useTodotore();
+    store.addTodo("应该为done为true")
+    store.doneTodo(1);
+    expect(store.todoList[1]).toEqual({
+        done:true,
+        content:"应该为done为true"
+    })
+  });
+
+  it("调用removeDone应该将对应index的todo删除", () => {
+    const store = useTodotore();
+    store.addTodo("1")
+    store.addTodo("2")
+    store.addTodo("3")
+    const remove = store.removeTodo(2)
+    const remover = store.removeTodo(1)
+    expect(store.todoList).toContain(remove)
+    expect(store.todoList).toContain(remover)
+  });
+});
+```
+</div>
+
+
+<BarBottom  title="Liga技术分享">
+  <Item text="Sharkchili1015">
+    <carbon:logo-github />
+  </Item>
+  <Item text="ligai.cn/">
+    <carbon:link />
+  </Item>
+</BarBottom>
+
 
 ---
 
@@ -364,11 +446,12 @@ export const useTodotore = defineStore("todo", () => {
 - 第七：请求结束后的回调
 <br>
 <br>
-如上所示，一个函数做了七件事，首先就是代码可读性很低，其次就是代码的`健壮性`不够，后续想要再加新功能会很难受<br>
+
+如上所示，一个函数做了七件事，首先就是违反了函数的`唯一目的性`,代码`可读性`很低，其次就是代码的`健壮性`不够，后续想要再加新功能会很难受<br>
 其二：这种函数确实不适合编写测试代码，因为一个函数确实太耦合了，一个函数做了七件事，我们的测试代码基本是基于函数的输入和输出去进行测试的，如果一个函数有一个输出但是造成了七种不同的副作用，会导致很难编写测试代码。
 <br>
 
-`个人认为：能编写出单元测试的代码的可读性以及健壮性会远高于无法编写测试的代码`
+`个人认为：函数应该尽量遵循唯一目的性，这样的代码更利于编写单元测试，可读性以及健壮性会更高`
 
 <br>
 例如我上面的这个代码，说实话现在看来真的就是屎山
