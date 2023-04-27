@@ -103,7 +103,7 @@ position: left
 ---
 
 # TodoList组件（Dom）
-<div class="grid grid-cols-2 gap-x-2">
+<div class="grid" style="grid-template-columns: 1fr 2fr;">
 <div class="flex items-center justify-center">
 
 在todolist组件中我们实现了`添加`、`删除`、`完成`,`command命令式添加`的基础功能，具体功能稍后请看演示
