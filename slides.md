@@ -252,24 +252,6 @@ export const useTodotore = defineStore("todo", () => {
 </BarBottom>
 
 ---
-layout: image-x
-image: '../assets/vitest-plugin.jpg'
----
-
-# 对单个测试用例进行测试
-
-在vitest插件中，可以像vscode的`debugger`功能一样，选择运行某个测试case，不需要跑命令
-
-<BarBottom  title="Liga技术分享">
-  <Item text="Sharkchili1015">
-    <carbon:logo-github />
-  </Item>
-  <Item text="ligai.cn/">
-    <carbon:link />
-  </Item>
-</BarBottom>
-
----
 
 # 单元测试在`工时逻辑`中的应用
 
@@ -507,10 +489,12 @@ image: '../assets/vitest-plugin.jpg'
 <div  style="max-height:400px;padding-left:10px">
 
 - 经过改写之后的代码从一个函数拆分成了七个函数，不仅颗粒度变低了，代码的可读性也变得更好
-- 重要的是代码的可测试性大大提高，七个函数基本上每一个函数只复杂做一件事
+- 重要的是代码的可测试性大大提高，七个函数基本上每一个函数只负责做一件事
 - 在编写测试代码的时候，只需要观察每个函数的输入和输出是否是按预期执行的即可（涉及到dom的操作先不考虑）
 - 在执行单元测试的时候，如果哪个环节出错了很快就能发现问题
 
+<br>
+<br>
 
 # 小结
  - 尽可能降低代码的`耦合性`，每个函数`各司其职`
