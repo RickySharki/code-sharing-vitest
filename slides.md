@@ -186,21 +186,23 @@ export const useTodotore = defineStore("todo", () => {
     count.value++;
   };
 
-  const todoList = ref<Todo[]>([]);
+  const todoList = ref<Todo[]>([{
+    done:false,
+    content:'默认的todo'
+  }]);
 
   const addTodo = (todo: string) => {
     const isTop = todo.includes("top:");
-    const isDone = todo.includes("done:");
-    const addContent = todo.replace("top:", "").replace("done:", "");
+    const addContent = todo.replace("top:", "")
     if (isTop) {
       todoList.value.unshift({
-        done: isDone,
+        done: false,
         content: addContent,
       });
       return;
     }
     todoList.value.push({
-      done: isDone,
+      done: false,
       content: addContent,
     });
   };
@@ -225,6 +227,7 @@ export const useTodotore = defineStore("todo", () => {
     removeAll
   };
 });
+
 
 
 ```
