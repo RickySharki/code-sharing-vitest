@@ -166,7 +166,7 @@ position: left
 <div class="flex items-center justify-center p-4">
 
 - TodoList组件所依赖的所有数据都在store中管理，具体涉及到的逻辑操作都在store中进行这样更有利于编写测试代码。
-- 其实并不一定都需要在store中管理，但是为了遵循`保持业务逻辑和显示逻辑分离`的原则，这里将`业务逻辑`和`dom显示`抽离
+- 为了遵循`保持业务逻辑和显示逻辑分离`的原则，这里将`业务逻辑`和`dom显示`抽离
 - 具体逻辑看演示。
 
 </div>
