@@ -781,7 +781,7 @@ describe("测试Command:addTodo功能", () => {
 </BarBottom>
 ---
 
-# 编写预估工时对应的单元测试(示例代码) 1/2
+# 编写预估工时对应的单元测试(示例代码) 1/4
 <div class="overflow-y-auto" style="max-height:400px;min-wight">
 
 ```ts
@@ -866,7 +866,7 @@ describe("coverEstimateLabour函数测试", () => {
 
 ---
 
-# 编写预估工时对应的单元测试 2/2
+# 编写预估工时对应的单元测试 2/4
 <div class="overflow-y-auto" style="max-height:400px;min-wight">
 <div  class="overflow-y-auto" style="max-height:400px;padding-left:10px">
 <br>
@@ -897,6 +897,64 @@ describe("coverEstimateLabour函数测试", () => {
     <carbon:link />
   </Item>
 </BarBottom>
+---
+
+# 编写预估工时对应的单元测试(示例代码) 3/4
+<div class="overflow-y-auto" style="max-height:400px;min-wight">
+
+```ts
+import {
+    coverEstimateLabour,
+  } from "../utils";
+  
+  import { describe, expect, it, beforeEach } from "vitest";
+
+  describe("coverEstimateLabour函数测试", () => {
+    it("在最后的汇总函数中对所有的函数再重复执行一遍", () => {
+      console.log('coverEstimateLabour(1,1,1)',coverEstimateLabour('1','1','1'))
+      expect(coverEstimateLabour('1','1','1')).toContain({
+        estimateLabour: 1,
+        remainingLabour:0,
+        totalEstimateLabour:2
+      });
+    });
+  });
+
+```
+</div>
+
+
+<BarBottom  title="Liga技术分享">
+  <Item text="Sharkchili1015">
+    <carbon:logo-github />
+  </Item>
+  <Item text="ligai.cn/">
+    <carbon:link />
+  </Item>
+</BarBottom>
+
+---
+
+
+# 编写预估工时对应的单元测试 4/4
+
+<br>
+
+<br>
+
+### 3/4的代码和1/4的代码有什么不同？
+
+
+
+<BarBottom  title="Liga技术分享">
+  <Item text="Sharkchili1015">
+    <carbon:logo-github />
+  </Item>
+  <Item text="ligai.cn/">
+    <carbon:link />
+  </Item>
+</BarBottom>
+
 ---
 layout: center
 class: "text-center"
