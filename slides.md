@@ -942,7 +942,10 @@ import {
 
 <br>
 
-### 3/4的代码和1/4的代码有什么不同？
+<div class="flex justify-center items-center" style="height:300px">
+<h4>3/4的代码和1/4的代码有什么不同？</h4>
+</div>
+
 
 
 
