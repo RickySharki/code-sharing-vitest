@@ -299,10 +299,19 @@ describe("todoStore", () => {
     store.addTodo("1")
     store.addTodo("2")
     store.addTodo("3")
-    const remove = store.removeTodo(2)
-    const remover = store.removeTodo(1)
+    const remove = store.removeTodo(1)
+    const remover = store.removeTodo(0)
     expect(store.todoList).toContain(remove)
     expect(store.todoList).toContain(remover)
+  });
+
+  it("调用removeAll应该将所有的todo删除", () => {
+    const store = useTodotore();
+    store.addTodo("1")
+    store.addTodo("2")
+    store.addTodo("3")
+    store.removeAll();
+    expect(store.todoList).toEqual([])
   });
 });
 ```
